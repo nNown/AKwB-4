@@ -31,7 +31,7 @@ void InstanceParser::SaveInstance(const std::vector<std::size_t>& instance, cons
     while(std::filesystem::exists(filename.str())) {
         ++filesWithTakenName;
         filename.str(std::string());
-        filename << path << "/" << "instance" << filesWithTakenName << ".rdm";
+        filename << path << "/" << "instance" << filesWithTakenName << ".rdi";
     }
 
     std::ofstream instanceFile = std::ofstream(filename.str(), std::ios::out);
