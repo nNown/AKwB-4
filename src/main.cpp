@@ -4,7 +4,7 @@
 #include <cstdlib>
 #include <time.h>
 
-bool findRestrictionMap(std::vector<std::size_t> restrictiveDigestionResult, std::vector<std::size_t>& map, std::size_t depth);
+bool findRestrictionMap(std::vector<std::size_t> restrictiveDigestion, std::vector<std::size_t>& map, std::size_t depth);
 
 int main(void) {
     std::srand(std::time(NULL));
@@ -42,55 +42,55 @@ int main(void) {
     return 0;
 }
 
-bool findRestrictionMap(std::vector<std::size_t> restrictiveDigestionResult, std::vector<std::size_t>& map, std::size_t depth) {
+bool findRestrictionMap(std::vector<std::size_t> restrictiveDigestion, std::vector<std::size_t>& map, std::size_t depth) {
     if(depth == map.size()) return true;
 
     std::size_t sequenceLength = 0;
-    for(auto& fragment : restrictiveDigestionResult) {
+    for(auto& fragment : restrictiveDigestion) {
         if(fragment > sequenceLength) {
             sequenceLength = fragment;
         }
     }
+
     if(depth == 0) {
         std::size_t secondLongestFragment = 0;
-        for(auto& fragment : restrictiveDigestionResult) {
+        for(auto& fragment : restrictiveDigestion) {
             if(fragment > secondLongestFragment && fragment < sequenceLength) {
                 secondLongestFragment = fragment;
             }
         }
 
         std::size_t firstFragment = sequenceLength - secondLongestFragment;
-        auto firstFragmentPositionInResult = std::find(std::begin(restrictiveDigestionResult), std::end(restrictiveDigestionResult), firstFragment);
-        auto firstFragmentPositionBackwards = std::find(std::begin(restrictiveDigestionResult), std::end(restrictiveDigestionResult), sequenceLength - firstFragment);
+        auto fragmentPositionForwards = std::find(restrictiveDigestion.begin(), restrictiveDigestion.end(), firstFragment);
+        auto fragmentPositionBackwards = std::find(restrictiveDigestion.begin(), restrictiveDigestion.end(), sequenceLength - firstFragment);
 
-        if(firstFragmentPositionInResult != std::end(restrictiveDigestionResult) && firstFragmentPositionBackwards != std::end(restrictiveDigestionResult)) {
-            restrictiveDigestionResult.erase(firstFragmentPositionInResult);
-            restrictiveDigestionResult.erase(firstFragmentPositionBackwards);
+        if(fragmentPositionForwards != restrictiveDigestion.end() && fragmentPositionBackwards != restrictiveDigestion.end()) {
+            restrictiveDigestion.erase(fragmentPositionForwards);
+            restrictiveDigestion.erase(fragmentPositionBackwards);
+
             map[depth] = firstFragment;
-            findRestrictionMap(restrictiveDigestionResult, map, depth + 1);
+            findRestrictionMap(restrictiveDigestion, map, depth + 1);
+        } else {
+            return false;
+        }
+    } else {
+        std::size_t summedResult = 0;
+        for(auto& fragment : map) {
+            summedResult += fragment;
         }
 
-        return false;
-    } else {
-        for(auto& fragmentLength : restrictiveDigestionResult) {
-            std::cout << "Depth: " << depth << " : " << fragmentLength << std::endl;
-            std::size_t summedMapFragments = 0;
-            for(auto& fragment : map) {
-                std::cout << fragment << " ";
-                summedMapFragments += fragment;
-            }
-            std::cout << std::endl;
-            
-            auto fragmentPositionInResult = std::find(std::begin(restrictiveDigestionResult), std::end(restrictiveDigestionResult), summedMapFragments);
-            auto fragmentPositionBackwards = std::find(std::begin(restrictiveDigestionResult), std::end(restrictiveDigestionResult), sequenceLength - summedMapFragments);
-            if(fragmentPositionInResult != std::end(restrictiveDigestionResult) && fragmentPositionBackwards != std::end(restrictiveDigestionResult)) {
-                restrictiveDigestionResult.erase(fragmentPositionInResult);
-                restrictiveDigestionResult.erase(fragmentPositionBackwards);
-                map[depth] = fragmentLength;
-                findRestrictionMap(restrictiveDigestionResult, map, depth + 1);
-            }
+        for(auto& fragment : restrictiveDigestion) {
+            std::vector<std::size_t> restrictiveDigestionCopy = std::vector<std::size_t>(restrictiveDigestion);
+            auto fragmentPositionForwards = std::find(restrictiveDigestionCopy.begin(), restrictiveDigestionCopy.end(), summedResult + fragment);
+            auto fragmentPositionBackwards = std::find(restrictiveDigestionCopy.begin(), restrictiveDigestionCopy.end(), sequenceLength - (summedResult + fragment));
 
-            if(depth == map.size()) break;
+            if(fragmentPositionForwards != restrictiveDigestionCopy.end() && fragmentPositionBackwards != restrictiveDigestionCopy.end()) {
+                restrictiveDigestionCopy.erase(fragmentPositionForwards);
+                restrictiveDigestionCopy.erase(fragmentPositionBackwards);
+
+                map[depth] = fragment;
+                findRestrictionMap(restrictiveDigestionCopy, map, depth + 1);
+            }
         }
     }
 
