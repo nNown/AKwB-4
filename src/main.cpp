@@ -1,10 +1,13 @@
 #include <iostream>
+#include <instance.h>
 #include <instance_parser.h>
 #include <instance_generator.h>
 #include <cstdlib>
 #include <time.h>
+#include <tuple>
+#include <map>
 
-bool findRestrictionMap(std::vector<std::size_t> restrictiveDigestion, std::vector<std::size_t>& map, std::size_t depth);
+bool findRestrictionMap(Instance& instance, const std::size_t& depth);
 
 int main(void) {
     std::srand(std::time(NULL));
@@ -12,87 +15,85 @@ int main(void) {
     InstanceParser* instanceParser = InstanceParser::Parser();
     InstanceGenerator* instanceGenerator = InstanceGenerator::Generator();
 
-    auto instance = instanceGenerator->GenerateInstance({ 2, 6 }, 2, true);
-    // instanceParser->SaveInstance(instance.first, "./tests");
-    // instanceParser->SaveInstance(instance.second, "./results");
+    auto instance = Instance(instanceParser->LoadInstance("./tests/instance.rdi")); 
 
-    
-    std::size_t n = 1, result = instanceGenerator->BinomialCoefficient(n + 2, 2);
-    while(result < instance.first.size()) {
-        n++;
-        result = instanceGenerator->BinomialCoefficient(n + 2, 2);
-    }
+    // auto generatedInstance = instanceGenerator->GenerateInstance({ 3, 8 }, 3, false);
+    // instanceParser->SaveInstance(generatedInstance.first, "./tests");
+    // instanceParser->SaveInstance(generatedInstance.second, "./results");
 
-    std::vector<std::size_t> answer = std::vector<std::size_t>(n);
-    std::cout << answer.size() << std::endl;
-    for(auto& element : instance.first) {
-        std::cout << element << " ";
-    }
-    std::cout << std::endl;
-    
-    if(result == instance.first.size()) {
-        bool test = findRestrictionMap(instance.first, answer, 0);
-        std::cout << (test ? "True" : "False") << std::endl;
-        for(auto& element : answer) {
-            std::cout << element << " ";
-        }
-        std::cout << std::endl;
+    // auto instance = Instance(generatedInstance.first);
+    if(instance.Map().size() > 0) {
+        findRestrictionMap(instance, 0);
     }
 
     return 0;
 }
 
-bool findRestrictionMap(std::vector<std::size_t> restrictiveDigestion, std::vector<std::size_t>& map, std::size_t depth) {
-    if(depth == map.size()) return true;
+bool findRestrictionMap(Instance& instance, const std::size_t& depth) {
+    std::size_t mapLength = 0;
+    for(auto& fragment : instance.Map()) {
+        mapLength += fragment;
+    }
 
-    std::size_t sequenceLength = 0;
-    for(auto& fragment : restrictiveDigestion) {
-        if(fragment > sequenceLength) {
-            sequenceLength = fragment;
+    if(depth == instance.Map().size()) {
+        if(mapLength == instance.SequenceLength()) {
+            for(auto& fragment : instance.Map()) {
+                std::cout << fragment << " ";
+            }
+            std::cout << std::endl;
+            return true;
         }
+        return false;
     }
 
     if(depth == 0) {
         std::size_t secondLongestFragment = 0;
-        for(auto& fragment : restrictiveDigestion) {
-            if(fragment > secondLongestFragment && fragment < sequenceLength) {
+        for(auto& [ fragment, usedCount ] : instance.RestrictiveDigestion()) {
+            if(fragment > secondLongestFragment && fragment < instance.SequenceLength()) {
                 secondLongestFragment = fragment;
             }
         }
 
-        std::size_t firstFragment = sequenceLength - secondLongestFragment;
-        auto fragmentPositionForwards = std::find(restrictiveDigestion.begin(), restrictiveDigestion.end(), firstFragment);
-        auto fragmentPositionBackwards = std::find(restrictiveDigestion.begin(), restrictiveDigestion.end(), sequenceLength - firstFragment);
+        std::size_t firstFragment = instance.SequenceLength() - secondLongestFragment;
+        if(instance.checkFragmentViability(firstFragment)) {
+            instance.Map()[depth] = firstFragment;
 
-        if(fragmentPositionForwards != restrictiveDigestion.end() && fragmentPositionBackwards != restrictiveDigestion.end()) {
-            restrictiveDigestion.erase(fragmentPositionForwards);
-            restrictiveDigestion.erase(fragmentPositionBackwards);
+            instance.RestrictiveDigestion()[firstFragment] = 1;
+            instance.RestrictiveDigestion()[secondLongestFragment] = 1;
 
-            map[depth] = firstFragment;
-            findRestrictionMap(restrictiveDigestion, map, depth + 1);
-        } else {
-            return false;
+            findRestrictionMap(instance, depth + 1);
         }
     } else {
-        std::size_t summedResult = 0;
-        for(auto& fragment : map) {
-            summedResult += fragment;
-        }
+        for(auto& [ fragment, usedCount ] : instance.RestrictiveDigestion()) {
+            if(instance.checkFragmentViability(fragment)) {
+                for(std::size_t i = 0; i < instance.Map().size(); i++) {
+                    std::size_t currentFragment = 0;
+                    if(instance.Map()[i] == 0) break;
+                    for(std::size_t j = i; j < instance.Map().size(); j++) {
+                        currentFragment += instance.Map()[j];
+                    }
+                    instance.RestrictiveDigestion()[currentFragment] = 1;
+                }
+                instance.RestrictiveDigestion()[fragment] = 1;
+                instance.RestrictiveDigestion()[mapLength + fragment] = 1;
 
-        for(auto& fragment : restrictiveDigestion) {
-            std::vector<std::size_t> restrictiveDigestionCopy = std::vector<std::size_t>(restrictiveDigestion);
-            auto fragmentPositionForwards = std::find(restrictiveDigestionCopy.begin(), restrictiveDigestionCopy.end(), summedResult + fragment);
-            auto fragmentPositionBackwards = std::find(restrictiveDigestionCopy.begin(), restrictiveDigestionCopy.end(), sequenceLength - (summedResult + fragment));
+                instance.Map()[depth] = fragment;
+                findRestrictionMap(instance, depth + 1);
+                instance.Map()[depth] = 0;
 
-            if(fragmentPositionForwards != restrictiveDigestionCopy.end() && fragmentPositionBackwards != restrictiveDigestionCopy.end()) {
-                restrictiveDigestionCopy.erase(fragmentPositionForwards);
-                restrictiveDigestionCopy.erase(fragmentPositionBackwards);
-
-                map[depth] = fragment;
-                findRestrictionMap(restrictiveDigestionCopy, map, depth + 1);
+                for(std::size_t i = 0; i < instance.Map().size(); i++) {
+                    std::size_t currentFragment = 0;
+                    if(instance.Map()[i] == 0) break;
+                    for(std::size_t j = i; j < instance.Map().size(); j++) {
+                        currentFragment += instance.Map()[j];
+                    }
+                    instance.RestrictiveDigestion()[currentFragment] = 0;
+                }
+                instance.RestrictiveDigestion()[fragment] = 0;
+                instance.RestrictiveDigestion()[mapLength + fragment] = 0;
             }
-        }
-    }
 
+        }  
+    }
     return false;
 }

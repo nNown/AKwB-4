@@ -31,16 +31,6 @@ std::pair<std::vector<std::size_t>, std::vector<std::size_t>> InstanceGenerator:
     return std::make_pair(instance, restrictionMap);
 }
 
-std::size_t InstanceGenerator::BinomialCoefficient(std::size_t n, std::size_t k) {
-    std::size_t counter = 1;
-    std::size_t denominator = 1;
-    for(std::size_t i = 1; i <= k; i++) {
-        counter *= (n + 1) - i;
-        denominator *= i;
-    }
-    return counter / denominator;
-}
-
 InstanceGenerator* InstanceGenerator::Generator() {
     if(_generator == nullptr) {
         _generator = new InstanceGenerator();
