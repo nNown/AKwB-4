@@ -3,11 +3,11 @@
 InstanceParser* InstanceParser::_parser = nullptr;
 InstanceParser::InstanceParser() {}
 
-std::vector<std::size_t> InstanceParser::LoadInstance(const std::string& path) {
+std::vector<int> InstanceParser::LoadInstance(const std::string& path) {
     std::ifstream instanceFile = std::ifstream(path, std::ios::in);
     if(!instanceFile.is_open()) throw std::runtime_error("Failed to open file");
 
-    std::vector<std::size_t> sequence = std::vector<std::size_t>();
+    std::vector<int> sequence = std::vector<int>();
 
     std::string fragmentLength;
     while(instanceFile >> fragmentLength) {
@@ -23,7 +23,7 @@ std::vector<std::size_t> InstanceParser::LoadInstance(const std::string& path) {
     return sequence;
 }
 
-void InstanceParser::SaveInstance(const std::vector<std::size_t>& instance, const std::string& path) {
+void InstanceParser::SaveInstance(const std::vector<int>& instance, const std::string& path) {
     std::stringstream filename;
     filename << path << "/" << "instance" << ".rdi";
 

@@ -1,24 +1,29 @@
 #pragma once
 
+#include <algorithm>
 #include <iostream>
-#include <map>
 #include <vector>
+#include <tuple>
 #include <functional>
 
 class Instance {
     private:
-        std::map<std::size_t, std::size_t> _restrictiveDigestion;
-        std::size_t _sequenceLength;
-        std::vector<std::size_t> _map;
+        std::vector<std::pair<int, int>> _restrictiveDigestion;
+        int _sequenceLength;
+        std::vector<int> _map;
+        int _expectedMapFragments;
 
     public:
-        std::map<std::size_t, std::size_t>& RestrictiveDigestion();
-        const std::size_t& SequenceLength();
-        std::vector<std::size_t>& Map();
+        std::vector<std::pair<int, int>>& RestrictiveDigestion();
+        const int& SequenceLength();
+        std::vector<int>& Map();
+        const int& ExpectedMapFragments();
 
-        bool checkFragmentViability(const std::size_t& fragment);
-        std::size_t BinomialCoefficient(const std::size_t& n, const std::size_t& k);
+        int findElement(const std::vector<std::pair<int, int>>& list, const std::pair<int, int>& element);
 
-        Instance(const std::vector<std::size_t>& restrictiveDigestion);
+        bool useFragment(const int& fragment, const bool& returnToSet);
+        int BinomialCoefficient(const int& n, const int& k);
+
+        Instance(const std::vector<int>& restrictiveDigestion);
         ~Instance();
 };

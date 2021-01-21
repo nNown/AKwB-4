@@ -13,8 +13,8 @@ class InstanceParser {
         
         
     public:
-        std::vector<std::size_t> LoadInstance(const std::string& path);
-        void SaveInstance(const std::vector<std::size_t>& instance, const std::string& path);
+        std::vector<int> LoadInstance(const std::string& path);
+        void SaveInstance(const std::vector<int>& instance, const std::string& path);
         static InstanceParser* Parser();
         ~InstanceParser();
 };
