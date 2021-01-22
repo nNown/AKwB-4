@@ -9,7 +9,8 @@ std::pair<std::vector<int>, std::vector<int>> InstanceGenerator::GenerateInstanc
     std::vector<int> restrictionMap = std::vector<int>(cutsQuantity + 1);
     for(auto& site : restrictionMap) {
         int element = 0;
-        while(std::find(std::begin(restrictionMap), std::end(restrictionMap), element) != std::end(restrictionMap)) element = range.first + std::rand() % range.second + 1;
+        // while(std::find(std::begin(restrictionMap), std::end(restrictionMap), element) != std::end(restrictionMap)) element = range.first + std::rand() % range.second + 1;
+        while(element < 1) element = range.first + std::rand() % range.second + 1;
 
         site = element;
     }
